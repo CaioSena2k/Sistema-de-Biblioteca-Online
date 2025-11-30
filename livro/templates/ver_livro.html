@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load filtros %}
+
+{% block 'conteudo' %}
+
+<div class="container mt-4">
+    
+    <div class="row mb-4">
+        
+        <div class="col-md-3 text-center">
+            {% if livro.capa_livro %}
+                <img src="{{ livro.capa_livro.url }}" class="img-fluid rounded shadow-lg" style="width: 100%; object-fit: cover;" alt="{{ livro.nome }}">
+            {% else %}
+                <div class="bg-secondary text-white d-flex align-items-center justify-content-center shadow rounded" style="height: 300px;">
+                    <i class="bi bi-book" style="font-size: 5rem;"></i>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-9">
+            <h1 class="font-weight-bold">{{livro.nome}}</h1>
+            <h5 class="text-muted mb-3">por <span class="text-primary">{{livro.autor}}</span> (Autor)</h5>
+            
+            <div class="mb-3">
+                {% if livro.quantidade > 0 %}
+                    <span class="badge badge-success p-2">Disponível</span>
+                {% else %}
+                    <span class="badge badge-danger p-2">Esgotado</span>
+                {% endif %}
+                
+                <span class="badge badge-info p-2">{{livro.categoria}}</span>
+                <span class="badge badge-dark p-2 ml-1">Estoque: {{ livro.quantidade }}</span>
+            </div>
+
+            <div class="card bg-light border-0 p-3 mt-4">
+                <p><strong>Cadastrado em:</strong> {{livro.data_cadastro}}</p>
+                
+                <div class="mt-2">
+                    
+                    {% if usuario_tem_o_livro %}
+                        {% if emprestimo_usuario.devolucao_planejada %}
+                            <div class="alert alert-warning p-3 text-center border-warning">
+                                <h5 class="font-weight-bold"><i class="bi bi-hourglass-split"></i> Devolução em Análise</h5>
+                                <p class="mb-0">Aguarde o bibliotecário confirmar o recebimento do livro físico.</p>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info p-2 text-center text-dark border-info">
+                                <i class="bi bi-info-circle"></i> Você está com este livro.
+                                {% if emprestimo_usuario.data_prazo %}
+                                    <br>Devolva até: <strong>{{ emprestimo_usuario.data_prazo|date:"d/m/Y" }}</strong>
+                                {% endif %}
+                            </div>
+                            
+                            <form action="{% url 'devolver_livro' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="id_livro_devolver" value="{{ livro.id }}">
+                                <button type="submit" class="btn btn-success btn-block shadow-sm">
+                                    <i class="bi bi-box-seam"></i> Solicitar Devolução
+                                </button>
+                            </form>
+                        {% endif %}
+
+                    {% elif livro.quantidade == 0 %}
+                        <button class="btn btn-danger btn-block shadow-sm" disabled>
+                            <i class="bi bi-x-circle"></i> Esgotado / Indisponível
+                        </button>
+
+                    {% else %}
+                        <form action="{% url 'cadastrar_emprestimo' %}" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="livro_emprestado" value="{{ livro.id }}">
+                            <input type="hidden" name="nome_emprestado" value="{{ usuario_logado.id }}">
+                            
+                            <button type="submit" class="btn btn-primary btn-block shadow-sm">
+                                <i class="bi bi-journal-plus"></i> Pegar Emprestado
+                            </button>
+                        </form>
+                    {% endif %}
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs" id="bookTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="desc-tab" data-toggle="tab" href="#descricao" role="tab">Descrição</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="detalhes-tab" data-toggle="tab" href="#detalhes" role="tab">Detalhes do Produto</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="historico-tab" data-toggle="tab" href="#historico" role="tab">Histórico de Empréstimos</a>
+        </li>
+    </ul>
+
+    <div class="tab-content border border-top-0 p-4 bg-white shadow-sm mb-5" id="bookTabContent">
+        
+        <div class="tab-pane fade show active" id="descricao" role="tabpanel">
+            <h4 class="mb-3">Descrição do Produto</h4>
+            <p class="text-justify">{{ livro.descricao|default:"Nenhuma descrição cadastrada."|linebreaks }}</p>
+            <hr>
+            <h5 class="mb-3">Sobre o Autor</h5>
+            <p class="text-justify text-muted">{{ livro.sobre_autor|default:"Sem informações sobre o autor."|linebreaks }}</p>
+        </div>
+
+        <div class="tab-pane fade" id="detalhes" role="tabpanel">
+            <h4 class="mb-3">Detalhes do produto</h4>
+            <table class="table table-striped w-50">
+                <tbody>
+                    <tr><th>Editora</th><td>{{ livro.editora|default:"-" }}</td></tr>
+                    <tr><th>Data da publicação</th><td>{{ livro.data_publicacao|default:"-" }}</td></tr>
+                    <tr><th>Idioma</th><td>{{ livro.idioma|default:"-" }}</td></tr>
+                    <tr><th>Número de páginas</th><td>{{ livro.paginas|default:"-" }} páginas</td></tr>
+                    <tr><th>ISBN-10</th><td>{{ livro.isbn10|default:"-" }}</td></tr>
+                    <tr><th>ISBN-13</th><td>{{ livro.isbn13|default:"-" }}</td></tr>
+                    <tr><th>Edição</th><td>{{ livro.edicao|default:"-" }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="tab-pane fade" id="historico" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Leitor</th>
+                            <th>Data Empréstimo</th>
+                            <th>Data Devolução</th>
+                            <th>Tempo</th>
+                            <th>Avaliação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in emprestimos %}
+                        <tr>
+                            <td>{{ i.nome_emprestado_anonimo|default:i.nome_emprestado }}</td>
+                            <td>{{ i.data_emprestimo }}</td>
+                            <td>{{ i.data_devolucao|default:"Pendente" }}</td>
+                            <td>{{ i.data_devolucao|mostra_duracao:i.data_emprestimo }}</td>
+                            <td>{{ i.avaliacao|default:"-" }}</td>
+                        </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="text-center">Nenhum registro encontrado.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

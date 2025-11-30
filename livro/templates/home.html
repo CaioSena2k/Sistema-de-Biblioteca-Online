@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block 'conteudo' %}
+
+<div class="bg-white shadow-sm mb-4 py-3">
+    <div class="container">
+        <form class="d-flex justify-content-center" action="{% url 'home' %}" method="GET">
+            <div class="input-group w-75">
+                <input type="text" name="q" class="form-control rounded-pill px-4" placeholder="Busque por título, autor..." value="{{ request.GET.q|default:'' }}">
+                <div class="input-group-append ml-2">
+                    <button class="btn btn-primary rounded-pill px-4" type="submit">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="container"> 
+    {% if status_categoria == '1' %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            Categoria cadastrada com sucesso.
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    {% endif %}
+
+    <h4 class="mb-4 font-weight-bold text-secondary">Livros em destaque</h4>
+
+    <div class="row">
+        {% for livro in livros %}
+            <div class="col-12 col-lg-6 mb-4">
+                
+                <div class="card border-0 shadow-sm h-100 flex-row overflow-hidden">
+                    
+                    <div class="d-flex align-items-center bg-light" style="width: 30%; min-width: 120px;">
+                        {% if livro.capa_livro %}
+                            <img src="{{ livro.capa_livro.url }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ livro.nome }}">
+                        {% else %}
+                            <img src="https://via.placeholder.com/150x220?text=Sem+Capa" class="w-100 h-100" style="object-fit: cover;" alt="Sem Capa">
+                        {% endif %}
+                    </div>
+
+                    <div class="card-body d-flex flex-column justify-content-center p-3" style="width: 70%;">
+                        
+                        <div class="mb-1">
+                            <span class="badge badge-light text-muted border">{{ livro.categoria }}</span>
+                        </div>
+
+                        <h5 class="card-title font-weight-bold mb-1 text-dark">{{ livro.nome }}</h5>
+                        <p class="card-text text-muted small mb-2">{{ livro.autor }}</p>
+
+                        <p class="card-text text-secondary small mb-3" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                            {{ livro.descricao|default:"Sem descrição disponível." }}
+                        </p>
+
+                        <div class="mt-auto d-flex align-items-center justify-content-between">
+                            {% if livro.emprestado %}
+                                <span class="text-danger small font-weight-bold"><i class="bi bi-x-circle"></i> Indisponível</span>
+                            {% else %}
+                                <span class="text-success small font-weight-bold"><i class="bi bi-check-circle"></i> Disponível</span>
+                            {% endif %}
+                            
+                            <a href="{% url 'ver_livros' livro.id %}" class="btn btn-sm btn-primary rounded-pill px-3">
+                                Ver Detalhes
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-emoji-frown display-4 text-muted"></i>
+                <p class="lead text-muted mt-3">Nenhum livro encontrado com esse nome.</p>
+                <a href="{% url 'home' %}" class="btn btn-outline-primary">Limpar Pesquisa</a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
