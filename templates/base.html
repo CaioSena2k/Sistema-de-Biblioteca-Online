@@ -43,10 +43,11 @@
                             </a>
                             <div class="dropdown-divider"></div>
                             
-                            {% if usuario_logado.id == 1 %}
+                            {% if usuario_logado.is_admin %}
                                 <h6 class="dropdown-header text-danger font-weight-bold">Administração</h6>
-                                <button type="button" class="dropdown-item" data-toggle="modal" data-target="#modalGerenciamento">
-                                    <i class="bi bi-gear"></i> Gerenciar Biblioteca
+                                <a class="dropdown-item" href="{% url 'painel_admin' %}">
+                                <i class="bi bi-speedometer2"></i> Painel do Administrador
+                                </a>
                                 </button>
                                 <div class="dropdown-divider"></div>
                             {% endif %}

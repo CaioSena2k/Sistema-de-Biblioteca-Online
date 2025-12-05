@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block 'conteudo' %}
+<div class="container mt-4">
+    
+    <!-- ======================================================= -->
+    <!-- PARTE 1: CONTROLE DE EMPRÉSTIMOS (TABELA COM BUSCA) -->
+    <!-- ======================================================= -->
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="font-weight-bold text-dark mb-0">
+                <i class="bi bi-collection-fill"></i> Controle de Empréstimos
+            </h2>
+            <p class="text-muted mb-0">Gerencie quem está com os livros da biblioteca.</p>
+        </div>
+        
+        <!-- Cards de Resumo Rápido -->
+        <div class="d-flex">
+            <div class="card bg-info text-white mr-3 shadow-sm border-0">
+                <div class="card-body p-2 px-3 text-center">
+                    <span class="h4 font-weight-bold d-block mb-0">{{ total_ativos }}</span>
+                    <small>Emprestados</small>
+                </div>
+            </div>
+            <div class="card bg-warning text-dark shadow-sm border-0">
+                <div class="card-body p-2 px-3 text-center">
+                    <span class="h4 font-weight-bold d-block mb-0">{{ pendentes_devolucao }}</span>
+                    <small>Solicitações</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de Pesquisa -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-3">
+            <form method="GET" action="{% url 'painel_admin' %}">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-right-0"><i class="bi bi-search"></i></span>
+                    </div>
+                    <input type="text" name="q" class="form-control border-left-0" placeholder="Pesquisar por Leitor ou Nome do Livro..." value="{{ request.GET.q|default:'' }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary px-4" type="submit">Filtrar</button>
+                        {% if request.GET.q %}
+                            <a href="{% url 'painel_admin' %}" class="btn btn-outline-secondary">Limpar</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Empréstimos -->
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="pl-4">Livro</th>
+                            <th>Leitor</th>
+                            <th>Data Retirada</th>
+                            <th>Data Limite</th>
+                            <th>Status</th>
+                            <th class="text-right pr-4">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in emprestimos %}
+                        <tr>
+                            <td class="pl-4 font-weight-bold text-dark">
+                                <i class="bi bi-book mr-2 text-secondary"></i> {{ emp.livro.nome }}
+                            </td>
+                            <td>
+                                {{ emp.nome_emprestado.nome|default:emp.nome_emprestado_anonimo }}
+                            </td>
+                            <td>{{ emp.data_emprestimo|date:"d/m/Y" }}</td>
+                            <td>
+                                <!-- Lógica de cores para o prazo -->
+                                {% now "Y-m-d" as hoje %}
+                                <span class="badge {% if emp.data_prazo|date:'Y-m-d' < hoje %}badge-danger{% else %}badge-light border{% endif %} p-2">
+                                    {{ emp.data_prazo|date:"d/m/Y" }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if emp.devolucao_planejada %}
+                                    <span class="badge badge-warning p-2"><i class="bi bi-clock"></i> Solicitou Devolução</span>
+                                {% else %}
+                                    <span class="text-muted small">Em uso</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right pr-4">
+                                <a href="{% url 'confirmar_devolucao_site' emp.id %}" class="btn btn-success btn-sm font-weight-bold shadow-sm" onclick="return confirm('Confirmar o recebimento do livro {{ emp.livro.nome }}?')">
+                                    <i class="bi bi-check2-circle"></i> Receber
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox display-4 d-block mb-3"></i>
+                                Nenhum empréstimo ativo encontrado.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- PARTE 2: BASE DE USUÁRIOS (CARDS COM OPÇÃO DE ADMIN) -->
+    <!-- ======================================================= -->
+
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-header bg-secondary text-white font-weight-bold d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-people-fill mr-2"></i> Base de Usuários ({{ usuarios.count }})</span>
+        </div>
+        
+        <div class="card-body bg-light">
+            <div class="row">
+                {% for u in usuarios %}
+                <div class="col-md-4 mb-3">
+                    <!-- Card do Usuário -->
+                    <div class="card border-0 shadow-sm h-100 {% if u.is_admin %}border-primary{% endif %}">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            
+                            <div class="d-flex align-items-center overflow-hidden">
+                                <!-- Avatar -->
+                                <div class="rounded-circle text-white d-flex align-items-center justify-content-center mr-3 flex-shrink-0 
+                                            {% if u.is_admin %}bg-primary{% else %}bg-secondary{% endif %}" 
+                                     style="width: 45px; height: 45px; font-weight: bold; font-size: 1.2rem;">
+                                    {{ u.nome|slice:":1"|upper }}
+                                </div>
+                                
+                                <!-- Nome e Cargo -->
+                                <div style="min-width: 0;">
+                                    <h6 class="font-weight-bold text-dark mb-0 text-truncate" title="{{ u.nome }}">{{ u.nome }}</h6>
+                                    <small class="text-muted">
+                                        {% if u.is_admin %}Administrador{% else %}Leitor{% endif %}
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Botão de Mudar Status (Setinhas) -->
+                            {% if u.id != usuario_logado.id %}
+                                <a href="{% url 'mudar_status_usuario' u.id %}" class="btn btn-outline-secondary btn-sm rounded-circle ml-2" 
+                                   title="{% if u.is_admin %}Rebaixar para Leitor{% else %}Promover a Admin{% endif %}"
+                                   style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </a>
+                            {% endif %}
+                            
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

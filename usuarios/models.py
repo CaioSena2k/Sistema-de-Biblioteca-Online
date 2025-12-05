@@ -12,6 +12,7 @@ class Usuario(models.Model):
     telefone = models.CharField(max_length=20, null=True, blank=True)
     cpf = models.CharField(max_length=14, null=True, blank=True)
     rua = models.CharField(max_length=100, null=True, blank=True)
+    is_admin = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return self.nome

@@ -9,7 +9,7 @@ from datetime import timedelta
 class Categoria(models.Model):
     nome = models.CharField(max_length=30)
     descricao = models.TextField()
-    usuario = models.ForeignKey(Usuario, on_delete=models.DO_NOTHING)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
         return self.nome
@@ -23,7 +23,7 @@ class Livros(models.Model):
     data_cadastro = models.DateField(default=date.today)
     emprestado = models.BooleanField(default = False)
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT)
-    usuario = models.ForeignKey(Usuario, on_delete=models.DO_NOTHING)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
     descricao = models.TextField(blank=True, null=True, verbose_name="Descrição do Produto")
     sobre_autor = models.TextField(blank=True, null=True, verbose_name="Sobre o Autor")
     editora = models.CharField(max_length=50, blank=True, null=True)
@@ -50,7 +50,7 @@ class Emprestimos(models.Model):
         ('B', 'Bom'),
         ('O', 'Ótimo')
     )
-    nome_emprestado = models.ForeignKey(Usuario, on_delete=models.DO_NOTHING, blank = True, null = True)
+    nome_emprestado = models.ForeignKey(Usuario, on_delete=models.CASCADE, blank = True, null = True)
     nome_emprestado_anonimo = models.CharField(max_length = 30, blank = True, null = True)
     data_emprestimo = models.DateTimeField(default=datetime.datetime.now())
     data_devolucao = models.DateTimeField(blank = True, null = True)
