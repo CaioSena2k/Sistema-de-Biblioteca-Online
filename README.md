@@ -3,7 +3,7 @@
 
 Sistema desenvolvido como Projeto Integrador para as disciplinas de **Engenharia de Software** e **Programação Orientada a Objetos (POO)** da UNIJORGE.
 
-## **👥 Equipe de Desenvolvimento (Grupo 2)**
+## **👥 Equipe de Desenvolvimento **
 
 | Aluno | Função / Contribuição |
 | :--- | :--- |
